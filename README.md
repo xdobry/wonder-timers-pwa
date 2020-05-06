@@ -1,4 +1,9 @@
-# hello-world
+# Wonder Timers PWA
+
+Progresive Web Application with multiple timers and watchers to track time.
+It contains also log for all actions.
+
+I have programmed it to learn PWA with VUE and material
 
 ## Project setup
 ```
