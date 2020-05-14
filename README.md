@@ -3,6 +3,9 @@
 Progresive Web Application with multiple timers and watchers to track time.
 It contains also log for all actions.
 
+Test Online: https://xdobry.github.io/wonder-timers-pwa/index.html
+
+
 I have programmed it to learn PWA with VUE and material
 
 ## Project setup

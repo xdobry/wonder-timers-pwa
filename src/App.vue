@@ -43,6 +43,7 @@
         </md-table-row>
     </md-table>
     </div>
+    <a href="https://github.com/xdobry/wonder-timers-pwa">Programmed by xdobry on github</a>
   </div>
   </div>
 </template>
