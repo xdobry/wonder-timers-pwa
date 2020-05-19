@@ -33,10 +33,12 @@
         
       </div>
       <input type="checkbox" v-model="isDecresing" v-on:change="changeMode" v-bind:disabled="isRunning || startTime"/>Timer
+      <input type="checkbox" v-model="playSound"/> Play Sound
       </md-card-content>
       <md-card-actions>
-          <md-button class="md-icon-button md-raised" v-on:click="buttonAction" v-bind:title="buttonMsg">
+          <md-button class="md-raised" v-on:click="buttonAction" v-bind:title="buttonMsg">
               <md-icon>{{isRunning ? 'pause' : 'play_circle_outline'}}</md-icon>
+              {{isRunning ? 'Pause' : 'Start'}}
           </md-button>
           <md-button class="md-icon-button md-raised" v-on:click="resetTimer" title="Reset">
               <md-icon>undo</md-icon>
@@ -49,6 +51,8 @@
 </template>
 
 <script>
+import alarmAudioFile from '../assets/alarm.ogg'
+
 export default {
   name: 'Timer',
   props: {
@@ -68,6 +72,7 @@ export default {
         dispalySeconds: '00',
         displayMilliseconds: '000',
         isDecresing: false,
+        playSound: false,
     };
   },
   mounted() {
@@ -75,6 +80,9 @@ export default {
     this.isDecresing = this.isTimer;
     if (this.isDecresing) {
         this.currentTime = this.seconds;
+    }
+    if (!this.alarmAudio) {
+        this.alarmAudio = new Audio(alarmAudioFile);
     }
   },
   methods: {
@@ -141,8 +149,16 @@ export default {
                 time:  this.formatTimeMillis(this.timeMillis),
             });
         }
+        if (isFinish && this.isDecresing && this.playSound) {
+            this.startPlaySound();
+        }
         this.isRunning = false;
         this.buttonMsg = 'Start';
+    },
+    startPlaySound() {
+        if (this.alarmAudio) {
+            this.alarmAudio.play();
+        }
     },
     resetTimer() {
         this.stopTimer();
