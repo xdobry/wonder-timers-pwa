@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/wonder-timers-pwa/precache-manifest.034d52a7057ebd80179eba0f610bf0e3.js"
+  "/wonder-timers-pwa/precache-manifest.50e27d0a68fea72d4f90bf4e66f6ccc7.js"
 );
 
 workbox.core.setCacheNameDetails({prefix: "wonder-timers"});
