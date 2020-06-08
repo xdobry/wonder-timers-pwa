@@ -36,6 +36,11 @@
       <input type="checkbox" v-model="playSound"/> Play Sound
       </md-card-content>
       <md-card-actions>
+          <select v-model="linkAction" id="linkAction" name="linkAction">
+              <option value="0">no link</option>
+              <option value="1">sync</option>
+              <option value="2">async</option>
+          </select>
           <md-button class="md-raised" v-on:click="buttonAction" v-bind:title="buttonMsg">
               <md-icon>{{isRunning ? 'pause' : 'play_circle_outline'}}</md-icon>
               {{isRunning ? 'Pause' : 'Start'}}
@@ -51,7 +56,8 @@
 </template>
 
 <script>
-import alarmAudioFile from '../assets/alarm.ogg'
+import alarmAudioFile from '../assets/alarm.ogg';
+import { EventBus } from '../eventBus';
 
 export default {
   name: 'Timer',
@@ -73,6 +79,7 @@ export default {
         displayMilliseconds: '000',
         isDecresing: false,
         playSound: false,
+        linkAction: "0",
     };
   },
   mounted() {
@@ -84,13 +91,39 @@ export default {
     if (!this.alarmAudio) {
         this.alarmAudio = new Audio(alarmAudioFile);
     }
+    EventBus.$on('timer-action', timerAction => {
+        if (timerAction.timer !== this.timerid) {
+            switch (this.linkAction) {
+                case "1":
+                    if (timerAction.isStart !== this.isRunning) {
+                        if (timerAction.isStart) {
+                            this.startTimer();
+                        } else {
+                            this.stopTimer();
+                        }
+                    }
+                    break;
+                case "2":
+                    if (timerAction.isStart === this.isRunning) {
+                        if (timerAction.isStart) {
+                            this.stopTimer();
+                        } else {
+                            this.startTimer();
+                        }
+                    }
+                    break;
+            }
+        }
+    });
   },
   methods: {
     buttonAction() {
         if (this.isRunning) {
             this.stopTimer();
+            EventBus.$emit('timer-action',{isStart: false, timer: this.timerid});
         } else {
             this.startTimer();
+            EventBus.$emit('timer-action',{isStart: true, timer: this.timerid});
         }
     },
     startTimer() {
@@ -175,7 +208,7 @@ export default {
         }
     },
     setDisplayMS(millis) {
-        const hours =  Math.floor((millis/360000000));
+        const hours =  Math.floor((millis/3600000));
         const minutes = Math.floor((millis/60000)%60);
         const seconds =  Math.floor((millis/1000)%60);
         const millisRest = millis % 1000;
@@ -214,12 +247,17 @@ export default {
         return minutesStr+":"+secondsRestStr;
     },
     formatTimeMillis(millis) {
-        const minutes = Math.floor(millis/60000);
+        const hours = Math.floor(millis/3600000)
+        const minutes = Math.floor((millis/60000)%60);
         const seconds =  Math.floor((millis/1000)%60);
         const millisRest = millis % 1000;
+        let hoursStr = hours.toString();
         let minutesStr = minutes.toString();
         let secondsStr = seconds.toString();
         let millisStr = millisRest.toString(); 
+        if (hoursStr.length<2) {
+            hoursStr = "0"+hoursStr;
+        }
         if (secondsStr.length<2) {
             secondsStr = "0"+secondsStr;
         }
@@ -229,7 +267,11 @@ export default {
         if (millisStr.length<3) {
             millisStr = "0".repeat(3-millisStr.length)+millisStr;
         }
-        return minutesStr+":"+secondsStr+"."+millisStr;
+        if (hours>0) {
+            return hoursStr+":"+minutesStr+":"+secondsStr+"."+millisStr;
+        } else {
+            return minutesStr+":"+secondsStr+"."+millisStr;
+        }
     },
     adaptTime(diffMS) {
         this.timeMillis+=diffMS;
