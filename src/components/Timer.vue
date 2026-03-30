@@ -1,17 +1,16 @@
 <template>
-  <md-card>
-      <md-card-header><md-icon>{{isDecresing ? 'alarm' : 'watch'}}</md-icon>: {{timerid}}</md-card-header>
-      <md-card-content>
-      <div>
-          <table>
+  <v-card density="compact">      
+      <v-card-title><v-icon>{{isDecresing ? 'mdi-alarm' : 'mdi-watch'}}</v-icon>: {{timerid}}</v-card-title>
+      <v-card-text>
+          <v-table style="width: fit-content;">
               <tr>
-                  <td><button v-bind:disabled="isRunning" v-on:click="adaptTime(3600000)"><md-icon>arrow_drop_up</md-icon></button></td>
+                  <td><button v-bind:disabled="isRunning" v-on:click="adaptTime(3600000)"><v-icon>mdi-arrow-up-drop-circle</v-icon></button></td>
                   <td/>
-                  <td><button v-bind:disabled="isRunning" v-on:click="adaptTime(60000)"><md-icon>arrow_drop_up</md-icon></button></td>
+                  <td><button v-bind:disabled="isRunning" v-on:click="adaptTime(60000)"><v-icon>mdi-arrow-up-drop-circle</v-icon></button></td>
                   <td/>
-                  <td><button v-bind:disabled="isRunning" v-on:click="adaptTime(1000)"><md-icon>arrow_drop_up</md-icon></button></td>
+                  <td><button v-bind:disabled="isRunning" v-on:click="adaptTime(1000)"><v-icon>mdi-arrow-up-drop-circle</v-icon></button></td>
                   <td/>
-                  <td><button v-bind:disabled="isRunning" v-on:click="resetMillis()"><md-icon>undo</md-icon></button></td>
+                  <td><button v-bind:disabled="isRunning" v-on:click="resetMillis()"><v-icon>mdi-undo</v-icon></button></td>
               </tr>
               <tr class='md-display-2'>
                   <td>{{displayHours}}</td>
@@ -23,35 +22,41 @@
                   <td>{{displayMilliseconds}}</td>
               </tr>
               <tr>
-                  <td><button v-bind:disabled="isRunning" v-on:click="adaptTime(-3600000)"><md-icon>arrow_drop_down</md-icon></button></td>
+                  <td><button v-bind:disabled="isRunning" v-on:click="adaptTime(-3600000)"><v-icon>mdi-arrow-down-drop-circle</v-icon></button></td>
                   <td/>
-                  <td><button v-bind:disabled="isRunning" v-on:click="adaptTime(-60000)"><md-icon>arrow_drop_down</md-icon></button></td>
+                  <td><button v-bind:disabled="isRunning" v-on:click="adaptTime(-60000)"><v-icon>mdi-arrow-down-drop-circle</v-icon></button></td>
                   <td/>
-                  <td><button v-bind:disabled="isRunning" v-on:click="adaptTime(-1000)"><md-icon>arrow_drop_down</md-icon></button></td>
+                  <td><button v-bind:disabled="isRunning" v-on:click="adaptTime(-1000)"><v-icon>mdi-arrow-down-drop-circle</v-icon></button></td>
               </tr>
-          </table>
-        
-      </div>
-      <input type="checkbox" v-model="isDecresing" v-on:change="changeMode" v-bind:disabled="isRunning || startTime"/>Timer
-      <input type="checkbox" v-model="playSound"/> Play Sound
-      </md-card-content>
-      <md-card-actions>
-          <md-button class="md-raised" v-on:click="buttonAction" v-bind:title="buttonMsg">
-              <md-icon>{{isRunning ? 'pause' : 'play_circle_outline'}}</md-icon>
+          </v-table>
+          <div class="d-flex">
+            <v-checkbox density="compact" label="Timer" v-model="isDecresing" v-on:change="changeMode" v-bind:disabled="isRunning || startTime"/>
+            <v-checkbox density="compact" label="Play Sound" v-model="playSound"/>
+          </div>
+      </v-card-text>
+      <v-card-actions>
+          <select v-model="linkAction" id="linkAction" name="linkAction">
+              <option value="0">no link</option>
+              <option value="1">sync</option>
+              <option value="2">async</option>
+          </select>
+          <v-btn class="md-raised" v-on:click="buttonAction" v-bind:title="buttonMsg">
+              <v-icon>{{isRunning ? 'mdi-pause' : 'mdi-play_circle_outline'}}</v-icon>
               {{isRunning ? 'Pause' : 'Start'}}
-          </md-button>
-          <md-button class="md-icon-button md-raised" v-on:click="resetTimer" title="Reset">
-              <md-icon>undo</md-icon>
-          </md-button>
-          <md-button class="md-icon-button md-raised" v-on:click="removeTimer" title="Remove">
-              <md-icon>close</md-icon>
-          </md-button>
-      </md-card-actions>
-  </md-card>
+          </v-btn>
+          <v-btn v-on:click="resetTimer" title="Reset">
+              <v-icon>mdi-undo</v-icon>
+          </v-btn>
+          <v-btn v-on:click="removeTimer" title="Remove">
+              <v-icon>mdi-close</v-icon>
+          </v-btn>
+      </v-card-actions>
+  </v-card>
 </template>
 
 <script>
-import alarmAudioFile from '../assets/alarm.ogg'
+import alarmAudioFile from '../assets/alarm.ogg';
+import { EventBus } from '../eventBus';
 
 export default {
   name: 'Timer',
@@ -73,6 +78,7 @@ export default {
         displayMilliseconds: '000',
         isDecresing: false,
         playSound: false,
+        linkAction: "0",
     };
   },
   mounted() {
@@ -84,13 +90,39 @@ export default {
     if (!this.alarmAudio) {
         this.alarmAudio = new Audio(alarmAudioFile);
     }
+    EventBus.on('timer-action', timerAction => {
+        if (timerAction.timer !== this.timerid) {
+            switch (this.linkAction) {
+                case "1":
+                    if (timerAction.isStart !== this.isRunning) {
+                        if (timerAction.isStart) {
+                            this.startTimer();
+                        } else {
+                            this.stopTimer();
+                        }
+                    }
+                    break;
+                case "2":
+                    if (timerAction.isStart === this.isRunning) {
+                        if (timerAction.isStart) {
+                            this.stopTimer();
+                        } else {
+                            this.startTimer();
+                        }
+                    }
+                    break;
+            }
+        }
+    });
   },
   methods: {
     buttonAction() {
         if (this.isRunning) {
             this.stopTimer();
+            EventBus.emit('timer-action',{isStart: false, timer: this.timerid});
         } else {
             this.startTimer();
+            EventBus.emit('timer-action',{isStart: true, timer: this.timerid});
         }
     },
     startTimer() {
@@ -175,7 +207,7 @@ export default {
         }
     },
     setDisplayMS(millis) {
-        const hours =  Math.floor((millis/360000000));
+        const hours =  Math.floor((millis/3600000));
         const minutes = Math.floor((millis/60000)%60);
         const seconds =  Math.floor((millis/1000)%60);
         const millisRest = millis % 1000;
@@ -214,12 +246,17 @@ export default {
         return minutesStr+":"+secondsRestStr;
     },
     formatTimeMillis(millis) {
-        const minutes = Math.floor(millis/60000);
+        const hours = Math.floor(millis/3600000)
+        const minutes = Math.floor((millis/60000)%60);
         const seconds =  Math.floor((millis/1000)%60);
         const millisRest = millis % 1000;
+        let hoursStr = hours.toString();
         let minutesStr = minutes.toString();
         let secondsStr = seconds.toString();
         let millisStr = millisRest.toString(); 
+        if (hoursStr.length<2) {
+            hoursStr = "0"+hoursStr;
+        }
         if (secondsStr.length<2) {
             secondsStr = "0"+secondsStr;
         }
@@ -229,7 +266,11 @@ export default {
         if (millisStr.length<3) {
             millisStr = "0".repeat(3-millisStr.length)+millisStr;
         }
-        return minutesStr+":"+secondsStr+"."+millisStr;
+        if (hours>0) {
+            return hoursStr+":"+minutesStr+":"+secondsStr+"."+millisStr;
+        } else {
+            return minutesStr+":"+secondsStr+"."+millisStr;
+        }
     },
     adaptTime(diffMS) {
         this.timeMillis+=diffMS;
