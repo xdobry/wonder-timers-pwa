@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/wonder-timers-pwa/sw.js', { scope: '/wonder-timers-pwa/' })})}

@@ -1,0 +1,1 @@
+{"name":"Wonder Timers PWA","short_name":"Timers","description":"Multitimer App","start_url":"/wonder-timers-pwa/","display":"standalone","background_color":"#ffffff","theme_color":"#ffffff","lang":"en","scope":"/wonder-timers-pwa/","icons":[{"src":"pwa-192x192.png","sizes":"192x192","type":"image/png"},{"src":"pwa-512x512.png","sizes":"512x512","type":"image/png"}]}
