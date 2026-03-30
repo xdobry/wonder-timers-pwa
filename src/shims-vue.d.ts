@@ -4,3 +4,13 @@ declare module '*.vue' {
   const component: DefineComponent<{}, {}, any>
   export default component
 }
+
+declare module 'virtual:pwa-register' {
+  interface RegisterSWOptions {
+    immediate?: boolean
+    onNeedRefresh?: () => void
+    onOfflineReady?: () => void
+  }
+
+  export function registerSW(options?: RegisterSWOptions): () => void
+}
